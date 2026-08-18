@@ -147,7 +147,7 @@ if (Test-Path -LiteralPath $GradleApp) { $gradleFile = $GradleApp }
 elseif (Test-Path -LiteralPath $GradleAppKts) { $gradleFile = $GradleAppKts }
 else { Fail 'app/build.gradle(.kts) not found.' }
 $gradleText = [System.IO.File]::ReadAllText($gradleFile)
-if ($gradleText -notmatch "project\.hasProperty\(['\"]SAGE_SKIP_NATIVE_BUILD['\"]\)") {
+if (-not $gradleText.Contains("project.hasProperty('SAGE_SKIP_NATIVE_BUILD')")) {
     Fail "SAGE_SKIP_NATIVE_BUILD guard was not found in $gradleFile. Refusing a package step that may rebuild libmain.so."
 }
 if ($gradleText -notmatch 'useLegacyPackaging\s*(=|\s)\s*false') {
