@@ -1,0 +1,25 @@
+ZERO HOUR 2026 - LOCAL ORIGINAL GAME REFERENCE
+
+Purpose:
+The original retail Command & Conquer: Generals and Zero Hour installations are the local behavior/content oracle.
+
+DETECTED ORIGINAL SOURCES:
+Generals:
+C:\Users\DELL\OneDrive\Desktop\مجلد جديد (9)\Command and Conquer - Generals\Command and Conquer Generals
+
+Zero Hour:
+C:\Users\DELL\OneDrive\Desktop\مجلد جديد (9)\Command and Conquer - Generals\Command and Conquer Generals Zero Hour
+
+PRIVATE LOCAL COPIES:
+90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\Generals
+90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\ZeroHour
+
+PUBLIC/SHAREABLE METADATA:
+ORIGINAL_RETAIL_GAME_MANIFEST_SAFE.txt
+ORIGINAL_RETAIL_GAME_VERSION_INFO.txt
+
+RULES:
+1. Never publish or redistribute files under 90_PRIVATE_NOT_FOR_GITHUB.
+2. Use the original retail installation as the behavior oracle when references disagree.
+3. Use SHA256 hashes to identify the exact local source data.
+4. Never replace measurable original behavior with guesses.

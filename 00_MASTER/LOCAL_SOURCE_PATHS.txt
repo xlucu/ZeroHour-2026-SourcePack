@@ -1,0 +1,127 @@
+ZERO HOUR 2026 - LOCAL SOURCE PATH MAP
+Generated: 2026-08-18 18:48:35 +03:00
+
+PURPOSE
+This file tells future local AI/automation exactly where the user's source material is located.
+The paths are references only. Original commercial game files must NOT be published.
+
+============================================================
+A. ORIGINAL RETAIL INSTALLATIONS - PRIMARY BEHAVIOR/CONTENT ORACLE
+============================================================
+
+GENERALS ORIGINAL INSTALL:
+C:\Users\DELL\OneDrive\Desktop\مجلد جديد (9)\Command and Conquer - Generals\Command and Conquer Generals
+
+ZERO HOUR ORIGINAL INSTALL:
+C:\Users\DELL\OneDrive\Desktop\مجلد جديد (9)\Command and Conquer - Generals\Command and Conquer Generals Zero Hour
+
+These directories may contain:
+- game executables and game.dat
+- BIG archives
+- INI/config data
+- W3D models/animations
+- textures
+- terrain
+- maps
+- UI/window resources
+- localization
+- speech
+- sound effects
+- music
+- videos/cinematics
+- shaders
+- DLL/runtime files
+- all other files shipped with the user's legal game installation
+
+============================================================
+B. EXISTING ORIGINAL MOBILE-ASSET SOURCE
+============================================================
+
+ORIGINAL MOBILE ASSET SOURCE:
+C:\Users\DELL\Desktop\ZeroHour_Mobile_Assets
+
+This is a user-owned original-data source that was already used by the Android port.
+Do not delete, rename, or overwrite the source unless explicitly requested.
+
+============================================================
+C. PRIVATE SOURCEPACK COPIES - NEVER PUBLISH
+============================================================
+
+PRIVATE RETAIL ROOT:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME
+
+PRIVATE GENERALS COPY:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\Generals
+
+PRIVATE ZERO HOUR COPY:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\ZeroHour
+
+Git rule:
+90_PRIVATE_NOT_FOR_GITHUB/ is LOCAL ONLY and must remain ignored.
+
+============================================================
+D. SAFE METADATA / MANIFESTS
+============================================================
+
+SAFE RETAIL MANIFEST:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\ORIGINAL_RETAIL_GAME_MANIFEST_SAFE.txt
+
+RETAIL VERSION INFO:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\ORIGINAL_RETAIL_GAME_VERSION_INFO.txt
+
+ORIGINAL GAME DATA HASH MANIFEST:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\ORIGINAL_GAME_DATA_SHA256.txt
+
+LOCAL ORIGINAL DATA REFERENCE:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\00_MASTER\LOCAL_ORIGINAL_GAME_DATA_REFERENCE.txt
+
+Rule:
+Use manifests to locate and identify individual audio/music/model/map/data files.
+Do not duplicate every individual absolute path into the master prompt.
+
+============================================================
+E. CURRENT ANDROID PORT
+============================================================
+
+CURRENT ANDROID PROJECT:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN
+
+SOURCEPACK SNAPSHOT:
+C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\12_CURRENT_ANDROID_PROJECT\GeneralsZH-Android-CLEAN
+
+============================================================
+F. CURRENT ANDROID TOOLCHAIN / RENDERER REFERENCES
+============================================================
+
+ANDROID SDK:
+C:\Users\DELL\AppData\Local\Android\Sdk
+
+ANDROID NDK:
+C:\Users\DELL\AppData\Local\Android\Sdk\ndk\27.1.12297006
+
+CMAKE:
+C:\Users\DELL\AppData\Local\Android\Sdk\cmake\3.31.6
+
+CURRENT CUSTOM DXVK SOURCE:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\actual-dxvk-source
+
+CURRENT CUSTOM DXVK BUILD:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\build-android-real
+
+============================================================
+G. FUTURE AI EXECUTION RULE
+============================================================
+
+If the AI is running on THIS Windows machine and has filesystem/tool access:
+- Inspect these paths directly.
+- Do not ask the user to re-upload files that are already accessible locally.
+- Read the safe manifests first, then access the private source only when needed.
+- Treat retail Zero Hour behavior plus released EA source as the primary behavior authority.
+
+If the AI is NOT running on this machine or cannot access C:\ paths:
+- These paths are informational only.
+- The user must attach/materialize the required private files into that environment.
+- Never assume a cloud AI can read a local Windows path merely because the path appears in the prompt.
+
+COPYRIGHT/SAFETY RULE
+Never publish or redistribute original commercial game assets from the private paths.

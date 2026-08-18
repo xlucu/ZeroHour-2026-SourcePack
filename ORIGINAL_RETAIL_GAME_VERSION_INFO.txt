@@ -1,0 +1,49 @@
+﻿# Original retail game executable/library version metadata
+# Generated: 2026-08-18 18:41:09 +03:00
+
+=== GENERALS ===
+Local private path: C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\Generals
+BINKW32.DLL	FileVersion=1.5J	ProductVersion=1.5J	Product=Bink and Smacker
+d3d8.dll	FileVersion=1.0.0.0	ProductVersion=89	Product=GenTool
+DrvMgt.dll	FileVersion=	ProductVersion=	Product=
+EdgeScroller.exe	FileVersion=1.1.37.02	ProductVersion=1.1.37.02	Product=
+Generals.exe	FileVersion=	ProductVersion=	Product=
+launcher\Generals.exe	FileVersion=	ProductVersion=	Product=
+mss32.dll	FileVersion=6.5c	ProductVersion=6.5c	Product=Miles Sound System
+P2XDLL.DLL	FileVersion=	ProductVersion=	Product=
+patchw32.dll	FileVersion=6.03	ProductVersion=6.03	Product=RTPatch
+WorldBuilder.exe	FileVersion=0, 8, 0, 0	ProductVersion=0, 8, 0, 0	Product=WorldBuilder Application
+
+=== ZERO HOUR ===
+Local private path: C:\Users\DELL\Desktop\ZeroHour_2026_SourcePack\90_PRIVATE_NOT_FOR_GITHUB\ORIGINAL_RETAIL_GAME\ZeroHour
+abseil_dll.dll	FileVersion=	ProductVersion=	Product=
+BINKW32.DLL	FileVersion=1.5J	ProductVersion=1.5J	Product=Bink and Smacker
+crashpad_handler.exe	FileVersion=0.8.3	ProductVersion=0.8.3	Product=Sentry Native SDK
+d3d8.dll	FileVersion=1.0.0.0	ProductVersion=89	Product=GenTool
+DrvMgt.dll	FileVersion=	ProductVersion=	Product=
+EAC_LaunchGeneralsOnline.exe	FileVersion=	ProductVersion=	Product=
+EdgeScroller.exe	FileVersion=1.1.37.02	ProductVersion=1.1.37.02	Product=
+EOSSDK-Win32-Shipping.dll	FileVersion=	ProductVersion=	Product=
+GameNetworkingSockets.dll	FileVersion=	ProductVersion=	Product=
+Generals.exe	FileVersion=	ProductVersion=	Product=
+GeneralsOnlineZH.exe	FileVersion=1.0.0.0	ProductVersion=1.0.0+114e847b3b328611161d3d2e98c53fa1ac8f876e	Product=Launcher
+GeneralsOnlineZH_60.exe	FileVersion=	ProductVersion=	Product=
+GenTool_uninstall.exe	FileVersion=8.9	ProductVersion=8.9	Product=GenTool
+GenToolUpdater.exe	FileVersion=1.0.0.0	ProductVersion=89	Product=GenTool Updater
+launcher\Generals.exe	FileVersion=	ProductVersion=	Product=
+libcrypto-3.dll	FileVersion=3.5.0	ProductVersion=3.5.0	Product=The OpenSSL Toolkit
+libcurl.dll	FileVersion=8.13.0-DEV	ProductVersion=8.13.0-DEV	Product=The curl library
+libprotobuf.dll	FileVersion=29.3.0	ProductVersion=29.3.0	Product=Protocol Buffers - Google's Data Interchange Format
+libssl-3.dll	FileVersion=3.5.0	ProductVersion=3.5.0	Product=The OpenSSL Toolkit
+mss32.dll	FileVersion=6.5c	ProductVersion=6.5c	Product=Miles Sound System
+P2XDLL.DLL	FileVersion=	ProductVersion=	Product=
+patchw32.dll	FileVersion=6.03	ProductVersion=6.03	Product=RTPatch
+plugins\easyanticheat\easyanticheat.dll	FileVersion=	ProductVersion=	Product=
+plugins\goanticheat\goanticheat.dll	FileVersion=	ProductVersion=	Product=
+sentry.dll	FileVersion=0.8.3	ProductVersion=0.8.3	Product=Sentry Native SDK
+WorldBuilder.exe	FileVersion=0, 8, 0, 0	ProductVersion=0, 8, 0, 0	Product=WorldBuilder Application
+WorldBuilder_LowRes.exe	FileVersion=0, 8, 0, 0	ProductVersion=0, 8, 0, 0	Product=WorldBuilder Application
+WorldBuilder_NewTheme.exe	FileVersion=0, 8, 0, 0	ProductVersion=0, 8, 0, 0	Product=WorldBuilder Application
+WorldBuilder_NewTheme_LowRes.exe	FileVersion=0, 8, 0, 0	ProductVersion=0, 8, 0, 0	Product=WorldBuilder Application
+xaudio2_9redist.dll	FileVersion=1.0.0.1	ProductVersion=1.0.0.1	Product=XAudio 2.9
+zlib1.dll	FileVersion=1.3.1	ProductVersion=1.3.1	Product=zlib
