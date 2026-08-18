@@ -1,8 +1,8 @@
 # ZeroHour_MALI_DUALSRC_FIX_V3.ps1
 # Purpose: Safely relax only the Android dualSrcBlend adapter-enumeration gate in the
 # already-built fbraz3/Molotov-oriented DXVK tree, rebuild DXVK incrementally, stage
-# the new D3D8/D3D9 ELF libraries, rebuild/install the APK, launch the game, and
-# capture the next proven runtime blocker.
+# the new D3D8/D3D9 ELF libraries, package/install the APK without rebuilding
+# libmain.so, launch the game, and capture the next proven runtime blocker.
 #
 # IMPORTANT:
 # - Windows PowerShell 5.1 compatible.
@@ -141,23 +141,26 @@ Copy-Item -LiteralPath $D3D9Out -Destination $D3D9Stage -Force
 Assert-Elf $D3D8Stage
 Assert-Elf $D3D9Stage
 
-Step 'Verify non-legacy native packaging setting'
+Step 'Verify package-only Gradle path and native packaging setting'
 $gradleFile = $null
 if (Test-Path -LiteralPath $GradleApp) { $gradleFile = $GradleApp }
 elseif (Test-Path -LiteralPath $GradleAppKts) { $gradleFile = $GradleAppKts }
 else { Fail 'app/build.gradle(.kts) not found.' }
 $gradleText = [System.IO.File]::ReadAllText($gradleFile)
+if ($gradleText -notmatch "project\.hasProperty\(['\"]SAGE_SKIP_NATIVE_BUILD['\"]\)") {
+    Fail "SAGE_SKIP_NATIVE_BUILD guard was not found in $gradleFile. Refusing a package step that may rebuild libmain.so."
+}
 if ($gradleText -notmatch 'useLegacyPackaging\s*(=|\s)\s*false') {
     Fail "useLegacyPackaging false was not found in $gradleFile. Refusing to risk native ELF packaging regression."
 }
-Write-Host 'useLegacyPackaging false detected.'
+Write-Host 'Package-only guard and useLegacyPackaging false detected.'
 
-Step 'Build APK only'
+Step 'Package APK without native engine rebuild'
 Push-Location $AndroidDir
 try {
     $gradlew = Join-Path $AndroidDir 'gradlew.bat'
     Assert-Path $gradlew 'Gradle wrapper'
-    Invoke-Native $gradlew @('clean', ':app:assembleDebug', '--stacktrace') 'Gradle APK build'
+    Invoke-Native $gradlew @('-PSAGE_SKIP_NATIVE_BUILD=true', ':app:assembleDebug', '--stacktrace') 'Gradle package-only APK build'
 } finally {
     Pop-Location
 }
