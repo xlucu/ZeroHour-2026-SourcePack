@@ -30,6 +30,7 @@ GATES = [
 ]
 
 HELPER = r'''
+#include <cstdio>
 // ZEROHOUR_ANDROID_INIT_GATE_V7
 static void ZeroHour_Android_InitGate_Log(const char *message)
 {
@@ -76,6 +77,14 @@ def unique_index(lines: list[str], needle: str, label: str, start: int = 0) -> i
     return hits[0]
 
 
+def first_index(lines: list[str], needle: str, label: str, start: int = 0) -> int:
+    for i in range(start, len(lines)):
+        if needle in lines[i]:
+            return i
+    fail(f"{label}: anchor containing {needle!r} not found")
+    raise AssertionError("unreachable")
+
+
 def insert_after_open_brace(lines: list[str], catch_index: int, statement: str, label: str) -> None:
     brace = None
     for i in range(catch_index, min(catch_index + 4, len(lines))):
@@ -86,6 +95,19 @@ def insert_after_open_brace(lines: list[str], catch_index: int, statement: str, 
         fail(f"{label}: opening brace not found")
     indent = lines[brace][: len(lines[brace]) - len(lines[brace].lstrip())] + "\t"
     lines.insert(brace + 1, indent + statement + "\n")
+
+
+def resolve_init_catches(lines: list[str]) -> tuple[int, int, int]:
+    init_start = unique_index(lines, "void GameEngine::init()", "GameEngine::init declaration")
+    ini_idx = first_index(lines, "catch (INIException e)", "GameEngine init INIException", init_start)
+
+    error_hits = [i for i in range(init_start, ini_idx) if "catch (ErrorCode ec)" in lines[i]]
+    if len(error_hits) != 1:
+        fail(f"GameEngine init ErrorCode catch: expected one before INI catch, found {len(error_hits)}")
+    error_idx = error_hits[0]
+
+    generic_idx = first_index(lines, "catch (...)" , "GameEngine init generic catch", ini_idx + 1)
+    return error_idx, ini_idx, generic_idx
 
 
 def main() -> int:
@@ -99,38 +121,24 @@ def main() -> int:
 
     lines = text.splitlines(keepends=True)
 
-    # Validate every subsystem anchor BEFORE mutating anything.
-    gate_indices: list[tuple[str, str, int]] = []
+    # Validate every subsystem and catch anchor BEFORE mutating anything.
     for name, needle in GATES:
-        gate_indices.append((name, needle, unique_index(lines, needle, name)))
-
+        unique_index(lines, needle, name)
     pre_idx = unique_index(lines, '#include "PreRTS.h"', "PreRTS include")
-    ini_idx = unique_index(lines, "catch (INIException e)", "GameEngine init INIException")
-
-    # The init ErrorCode catch occurs before the init INIException catch.
-    error_hits = [i for i, line in enumerate(lines[:ini_idx]) if "catch (ErrorCode ec)" in line]
-    if len(error_hits) != 1:
-        fail(f"GameEngine init ErrorCode catch: expected one before INI catch, found {len(error_hits)}")
-    error_idx = error_hits[0]
-
-    # The first catch(...) after that INI catch belongs to GameEngine::init.
-    generic_hits = [i for i in range(ini_idx + 1, len(lines)) if "catch (...)" in lines[i]]
-    if not generic_hits:
-        fail("GameEngine init generic catch not found")
-    generic_idx = generic_hits[0]
+    resolve_init_catches(lines)
 
     backup = CPP.with_suffix(CPP.suffix + ".before_init_gate_v7.bak")
     if not backup.exists():
         shutil.copy2(CPP, backup)
         print(f"Backup: {backup}")
 
-    # Insert helper immediately after the PreRTS include line. It relies only on
-    # FILE/fopen/fprintf already used by this same translation unit.
+    # Insert helper immediately after PreRTS. <cstdio> makes FILE/fopen/fprintf
+    # declarations explicit and keeps the diagnostic self-contained.
     lines.insert(pre_idx + 1, "\n" + HELPER + "\n")
 
-    # Re-resolve anchors after helper insertion, then add BEGIN/OK around each.
-    # Work from bottom to top so insertion does not invalidate earlier indices.
-    resolved = []
+    # Add BEGIN/OK around each post-ThingFactory subsystem. Work bottom-up so
+    # insertions cannot move unprocessed anchors.
+    resolved: list[tuple[str, int]] = []
     for name, needle in GATES:
         resolved.append((name, unique_index(lines, needle, name)))
     for name, idx in sorted(resolved, key=lambda item: item[1], reverse=True):
@@ -138,18 +146,9 @@ def main() -> int:
         lines.insert(idx + 1, indent + f'ZeroHour_Android_InitGate_Log("OK {name}");\n')
         lines.insert(idx, indent + f'ZeroHour_Android_InitGate_Log("BEGIN {name}");\n')
 
-    # Re-resolve catches after gate instrumentation.
-    ini_idx = unique_index(lines, "catch (INIException e)", "GameEngine init INIException")
-    error_hits = [i for i, line in enumerate(lines[:ini_idx]) if "catch (ErrorCode ec)" in line]
-    if len(error_hits) != 1:
-        fail(f"ErrorCode catch moved unexpectedly: found {len(error_hits)}")
-    error_idx = error_hits[0]
-    generic_hits = [i for i in range(ini_idx + 1, len(lines)) if "catch (...)" in lines[i]]
-    if not generic_hits:
-        fail("Generic catch moved unexpectedly")
-    generic_idx = generic_hits[0]
+    error_idx, ini_idx, generic_idx = resolve_init_catches(lines)
 
-    # Insert from bottom to top to preserve the remaining catch indices.
+    # Insert catch diagnostics from bottom to top so earlier indices stay valid.
     insert_after_open_brace(
         lines,
         generic_idx,
