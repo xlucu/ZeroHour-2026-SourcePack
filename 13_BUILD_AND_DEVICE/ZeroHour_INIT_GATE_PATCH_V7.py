@@ -16,6 +16,9 @@ ROOT = Path(r"C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN")
 CPP = ROOT / "Generals" / "Code" / "GameEngine" / "Source" / "Common" / "GameEngine.cpp"
 MARKER = "ZEROHOUR_ANDROID_INIT_GATE_V7"
 
+# Sequential anchors after the last proven runtime marker (ThingFactory done).
+# These are diagnostics only; each original statement remains unchanged and is
+# merely surrounded by BEGIN/OK file-log calls.
 GATES = [
     ("UpgradeCenter", "initSubsystem(TheUpgradeCenter,"),
     ("GameClient", "initSubsystem(TheGameClient,"),
@@ -27,6 +30,14 @@ GATES = [
     ("Recorder", "initSubsystem(TheRecorder,"),
     ("Radar", "initSubsystem(TheRadar,"),
     ("VictoryConditions", "initSubsystem(TheVictoryConditions,"),
+    ("MetaMap", "initSubsystem(TheMetaMap,"),
+    ("MetaMapGenerate", "TheMetaMap->generateMetaMap();"),
+    ("MetaMapVerify", "TheMetaMap->verifyMetaMap();"),
+    ("ActionManager", "initSubsystem(TheActionManager,"),
+    ("GameStateMap", "initSubsystem(TheGameStateMap,"),
+    ("GameState", "initSubsystem(TheGameState,"),
+    ("GameResultsQueue", "initSubsystem(TheGameResultsQueue,"),
+    ("PostProcessLoadAll", "TheSubsystemList->postProcessLoadAll();"),
 ]
 
 HELPER = r'''
@@ -121,7 +132,7 @@ def main() -> int:
 
     lines = text.splitlines(keepends=True)
 
-    # Validate every subsystem and catch anchor BEFORE mutating anything.
+    # Validate every subsystem/action and catch anchor BEFORE mutating anything.
     for name, needle in GATES:
         unique_index(lines, needle, name)
     pre_idx = unique_index(lines, '#include "PreRTS.h"', "PreRTS include")
@@ -132,11 +143,9 @@ def main() -> int:
         shutil.copy2(CPP, backup)
         print(f"Backup: {backup}")
 
-    # Insert helper immediately after PreRTS. <cstdio> makes FILE/fopen/fprintf
-    # declarations explicit and keeps the diagnostic self-contained.
     lines.insert(pre_idx + 1, "\n" + HELPER + "\n")
 
-    # Add BEGIN/OK around each post-ThingFactory subsystem. Work bottom-up so
+    # Add BEGIN/OK around each post-ThingFactory operation. Work bottom-up so
     # insertions cannot move unprocessed anchors.
     resolved: list[tuple[str, int]] = []
     for name, needle in GATES:
@@ -172,7 +181,7 @@ def main() -> int:
     required = [
         MARKER,
         'ZeroHour_Android_InitGate_Log("BEGIN UpgradeCenter")',
-        'ZeroHour_Android_InitGate_Log("OK VictoryConditions")',
+        'ZeroHour_Android_InitGate_Log("OK PostProcessLoadAll")',
         'ZeroHour_Android_InitGate_LogCode("CATCH ErrorCode"',
         "e.mFailureMessage ? e.mFailureMessage",
         'ZeroHour_Android_InitGate_Log("CATCH unknown exception during GameEngine::init")',
