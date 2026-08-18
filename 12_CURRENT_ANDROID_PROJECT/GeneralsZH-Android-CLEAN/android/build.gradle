@@ -1,0 +1,11 @@
+// GeneralsX @feature android-port 06/07/2026
+// Top-level Gradle build file. The Android plugin version tracks the installed
+// Android Studio / Gradle — bump together with gradle-wrapper.properties.
+
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}

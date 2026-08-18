@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GeneralsX @feature android-port 06/07/2026
+  AndroidManifest.xml — the analog of ios/Stub/Info.plist.
+
+  Key choices:
+    - landscape, full-screen (the game is an RTS designed for wide screens)
+    - android:largeHeap="true" (the desktop engine reaches ~3GB RSS on iOS; the
+      per-process cap on Android is often lower, so request the largest heap the
+      OS will grant)
+    - configChanges: SDL3's SDLActivity handles orientation/keyboard/screen-size
+      changes itself; without this Android recreates the Activity on every rotation
+      and the Vulkan surface is torn down.
+    - extractNativeLibs="false": keep .so libs page-aligned inside the APK so the
+      loader mmaps them directly (smaller install, faster start).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- OpenGL/Vulkan surface, audio (OpenAL/Oboe), and vibration for EVA cues. -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
+    <uses-feature android:name="android.hardware.vulkan.level" android:required="true" />
+    <uses-feature android:name="android.hardware.vulkan.version" android:version="0x00401000" android:required="true" />
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- LAN multiplayer (mirrors NSLocalNetworkUsageDescription on iOS). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <application
+        android:allowBackup="false"
+        android:label="Generals Zero Hour"
+        android:hasCode="true"
+        android:largeHeap="true"
+        android:supportsRtl="false"
+        android:extractNativeLibs="false"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+        android:icon="@mipmap/ic_launcher">
+
+        <activity
+            android:name=".GameActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|fontScale|density"
+            android:launchMode="singleInstance"
+            android:screenOrientation="landscape"
+            android:resizeableActivity="false">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

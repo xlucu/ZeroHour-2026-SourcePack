@@ -1,0 +1,155 @@
+// GeneralsX @feature android-port 06/07/2026
+// app/build.gradle
+//
+// The native engine is built by the REPO-ROOT CMakeLists.txt (the same one
+// macOS/iOS/Linux use), driven by Gradle's externalNativeBuild. The result is
+// libmain.so (SDL3's nativeRunMain dlopens it and calls SDL_main). Gradle then
+// packs libmain.so + the dlopen'd runtime .so libs (libdxvk_d3d8.so,
+// libdxvk_d3d9.so, libSDL3.so, libSDL3_image.so, libopenal.so) from jniLibs/
+// into the APK's lib/arm64-v8a/.
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'me.generalsx.zh'
+    compileSdk 35
+    ndkVersion "27.1.12297006"
+
+    defaultConfig {
+        applicationId "me.generalsx.zh"
+        // minSdk 24 = Android 7.0: the first API level with a usable system
+        // libvulkan.so. DXVK requires native Vulkan; there is no fallback.
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "0.1-android"
+
+        // Arm64-v8a only: the game is a desktop RTS port; skip armeabi-v7a and
+        // ship x86_64 only for emulator debugging via a separate build flavor
+        // (not enabled here to keep the release APK small).
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+
+        // Drive the existing CMake build from the repo root. CMakePresets.json's
+        // android-vulkan preset sets ANDROID_ABI / ANDROID_PLATFORM / NDK / etc.
+        externalNativeBuild {
+            cmake {
+                // Use the android-vulkan preset; -P applies its cache vars.
+                arguments "-DCMAKE_TOOLCHAIN_FILE=" + android.ndkDirectory + "/build/cmake/android.toolchain.cmake",
+                          "-DANDROID_ABI=arm64-v8a",
+                          "-DANDROID_PLATFORM=android-24",
+                          "-DANDROID_STL=c++_shared",
+                          "-DSAGE_USE_DX8=OFF",
+                          "-DSAGE_USE_SDL3=ON",
+                          "-DSAGE_USE_OPENAL=ON",
+                          "-DSAGE_USE_GLM=ON",
+                          "-DSAGE_DXVK_USE_LOCAL_FORK=ON",
+                          "-DRTS_BUILD_GENERALS=OFF",
+                          "-DRTS_BUILD_CORE_TOOLS=OFF",
+                          "-DRTS_BUILD_ZEROHOUR_TOOLS=OFF",
+                          "-DRTS_BUILD_ZEROHOUR_EXTRAS=OFF",
+                          "-DRTS_BUILD_OPTION_FFMPEG=OFF",
+                          "-DSAGE_UPDATE_CHECK=OFF",
+                          "-DRTS_CRASHDUMP_ENABLE=OFF",
+                          "-DRTS_BUILD_OPTION_SAGE_PATCH=OFF"
+                // ffmpeg OFF by default: vcpkg's ffmpeg:arm64-android is broken
+                // (microsoft/vcpkg#33963); enable via a hand-built .so (see
+                // scripts/build/android/README.md) once provided.
+                cFlags "-DANDROID"
+                cppFlags "-DANDROID", "-std=c++20"
+                targets "z_generals"
+            }
+        }
+    }
+
+    // Point at the repo-root CMakeLists.txt (this file is at android/app/, repo
+    // root is two levels up).
+    // GeneralsX @build android-port 07/07/2026 Allow APK repackaging from
+    // pre-staged .so libs without re-running the full CMake build. Set
+    // -PSAGE_SKIP_NATIVE_BUILD=true (or gradle -PSAGE_SKIP_NATIVE_BUILD) to
+    // package only — used when the .so artifacts are already in jniLibs/.
+    if (!project.hasProperty('SAGE_SKIP_NATIVE_BUILD')) {
+        externalNativeBuild {
+            cmake {
+                path "../../CMakeLists.txt"
+                version "3.25.0+"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Proguard is off: the native engine is the whole app; there is no
+            // Java/Kotlin bytecode to shrink beyond the SDLActivity stub.
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // Keep debug symbols for logcat symbolization; the .so is large but
+            // debug builds are not shipped.
+            packagingOptions {
+                jniDebuggable true
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // SDL3 native libs (libSDL3.so, libSDL3_image.so), DXVK (libdxvk_d3d8.so,
+    // libdxvk_d3d9.so), and OpenAL (libopenal.so) are produced by the CMake
+    // build and copied here by scripts/build/android/package-android-zh.sh.
+    // Gradle packs them into lib/arm64-v8a/ alongside libmain.so.
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+            assets.srcDirs = ['src/main/assets']
+            java.srcDirs = ['src/main/java']
+            
+            // Reference the SDL3 Java source path from the build cache if it exists,
+            // otherwise dynamically search the .cxx build folder.
+            def sdl3JavaSrc = file("../../build/android-vulkan/_deps/sdl3-src/android-project/app/src/main/java")
+            if (sdl3JavaSrc.exists()) {
+                java.srcDirs += sdl3JavaSrc
+            } else {
+                def cxxDir = file(".cxx")
+                if (cxxDir.exists()) {
+                    cxxDir.eachFileRecurse { f ->
+                        if (f.name == "SDLActivity.java" && f.path.contains("sdl3-src")) {
+                            def javaRoot = f.parentFile.parentFile.parentFile.parentFile
+                            java.srcDirs += javaRoot
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Large native lib: do not compress .so in the APK (extractNativeLibs=false
+    // keeps them page-aligned so Android can mmap directly from the APK).
+    // GeneralsX @build android-port 07/07/2026 Do NOT strip debug symbols
+    // from the release .so libs. DXVK's libdxvk_d3d8/d3d9.so crash when
+    // stripped — the symbol table is needed for the Vulkan dispatch tables
+    // to resolve correctly. This disables AGP's stripReleaseDebugSymbols task.
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging false
+            // Keep DXVK libs intact — stripping them breaks Vulkan dispatch.
+            keepDebugSymbols += ['**/libdxvk_d3d8.so', '**/libdxvk_d3d9.so', '**/libopenal.so']
+        }
+    }
+}
+
+configurations.configureEach {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+}

@@ -1,0 +1,263 @@
+/*
+**	Command & Conquer Generals Zero Hour(tm)
+**	Copyright 2025 Electronic Arts Inc.
+**
+**	This program is free software: you can redistribute it and/or modify
+**	it under the terms of the GNU General Public License as published by
+**	the Free Software Foundation, either version 3 of the License, or
+**	(at your option) any later version.
+**
+**	This program is distributed in the hope that it will be useful,
+**	but WITHOUT ANY WARRANTY; without even the implied warranty of
+**	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**	GNU General Public License for more details.
+**
+**	You should have received a copy of the GNU General Public License
+**	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+//																																						//
+//  (c) 2001-2003 Electronic Arts Inc.																				//
+//																																						//
+////////////////////////////////////////////////////////////////////////////////
+
+#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+
+#include "GameNetwork/IPEnumeration.h"
+
+#ifndef _WIN32
+#include <ifaddrs.h>
+#endif
+
+IPEnumeration::IPEnumeration( void )
+{
+	m_IPlist = NULL;
+	m_isWinsockInitialized = false;
+}
+
+IPEnumeration::~IPEnumeration( void )
+{
+	if (m_isWinsockInitialized)
+	{
+#ifdef _WIN32
+		WSACleanup();
+#endif
+		m_isWinsockInitialized = false;
+	}
+
+	EnumeratedIP *ip = m_IPlist;
+	while (ip)
+	{
+		ip = ip->getNext();
+		m_IPlist->deleteInstance();
+		m_IPlist = ip;
+	}
+}
+
+EnumeratedIP * IPEnumeration::getAddresses( void )
+{
+	if (m_IPlist)
+		return m_IPlist;
+
+#ifdef _WIN32
+	if (!m_isWinsockInitialized)
+	{
+#ifdef _WIN32
+		WORD verReq = MAKEWORD(2, 2);
+		WSADATA wsadata;
+
+		int err = WSAStartup(verReq, &wsadata);
+		if (err != 0) {
+			return NULL;
+		}
+
+		if ((LOBYTE(wsadata.wVersion) != 2) || (HIBYTE(wsadata.wVersion) !=2)) {
+			WSACleanup();
+			return NULL;
+		}
+#endif
+		m_isWinsockInitialized = true;
+	}
+
+	// get the local machine's host name
+	char hostname[256];
+	if (gethostname(hostname, sizeof(hostname)))
+	{
+		#ifdef _WIN32
+		DEBUG_LOG(("Failed call to gethostname; WSAGetLastError returned %d\n", WSAGetLastError()));
+		#endif
+		return NULL;
+	}
+	DEBUG_LOG(("Hostname is '%s'\n", hostname));
+	
+	// get host information from the host name
+	hostent* hostEnt = gethostbyname(hostname);
+	if (hostEnt == NULL)
+	{
+		#ifdef _WIN32
+		DEBUG_LOG(("Failed call to gethostnyname; WSAGetLastError returned %d\n", WSAGetLastError()));
+		#endif
+		return NULL;
+	}
+	
+	// sanity-check the length of the IP adress
+	if (hostEnt->h_length != 4)
+	{
+		DEBUG_LOG(("gethostbyname returns oddly-sized IP addresses!\n"));
+		return NULL;
+	}
+	
+	// construct a list of addresses
+	int numAddresses = 0;
+	char *entry;
+	while ( (entry = hostEnt->h_addr_list[numAddresses++]) != 0 )
+	{
+		EnumeratedIP *newIP = newInstance(EnumeratedIP);
+
+		AsciiString str;
+		str.format("%d.%d.%d.%d", (unsigned char)entry[0], (unsigned char)entry[1], (unsigned char)entry[2], (unsigned char)entry[3]);
+
+		UnsignedInt testIP = *((UnsignedInt *)entry);
+		UnsignedInt ip = ntohl(testIP);
+
+		/*
+		ip = *entry++;
+		ip <<= 8;
+		ip += *entry++;
+		ip <<= 8;
+		ip += *entry++;
+		ip <<= 8;
+		ip += *entry++;
+		*/
+
+		newIP->setIPstring(str);
+		newIP->setIP(ip);
+
+		DEBUG_LOG(("IP: 0x%8.8X / 0x%8.8X (%s)\n", testIP, ip, str.str()));
+
+		// Add the IP to the list in ascending order
+		if (!m_IPlist)
+		{
+			m_IPlist = newIP;
+			newIP->setNext(NULL);
+		}
+		else
+		{
+			if (newIP->getIP() < m_IPlist->getIP())
+			{
+				newIP->setNext(m_IPlist);
+				m_IPlist = newIP;
+			}
+			else
+			{
+				EnumeratedIP *p = m_IPlist;
+				while (p->getNext() && p->getNext()->getIP() < newIP->getIP())
+				{
+					p = p->getNext();
+				}
+				newIP->setNext(p->getNext());
+				p->setNext(newIP);
+			}
+		}
+	}
+#else
+	struct ifaddrs *ifaddr;
+	if (getifaddrs(&ifaddr) == -1)
+	{
+		DEBUG_LOG(("Failed call to getifaddrs; errno returned %d\n", errno));
+		return NULL;
+	}
+
+	for (struct ifaddrs *interface = ifaddr; interface != NULL; interface = interface->ifa_next)
+	{
+		if (interface->ifa_addr == NULL || interface->ifa_addr->sa_family != AF_INET)
+			continue;
+
+		// In case you need any of them, feel free to uncomment
+		if (strncmp(interface->ifa_name, "lo", 2) == 0)
+			continue;
+
+		if (strncmp(interface->ifa_name, "docker", 6) == 0)
+			continue;
+
+		EnumeratedIP *newIP = newInstance(EnumeratedIP);
+
+		AsciiString str;
+		str.format("%s", interface->ifa_name);
+
+		UnsignedInt testIP = ((struct sockaddr_in *)interface->ifa_addr)->sin_addr.s_addr;
+		UnsignedInt ip = ntohl(testIP);
+
+		newIP->setIPstring(str);
+		newIP->setIP(ip);
+
+		DEBUG_LOG(("IP: 0x%8.8X / 0x%8.8X (%s)\n", testIP, ip, str.str()));
+
+		// Add the IP to the list in ascending order
+		if (!m_IPlist)
+		{
+			m_IPlist = newIP;
+			newIP->setNext(NULL);
+		}
+		else
+		{
+			if (newIP->getIP() < m_IPlist->getIP())
+			{
+				newIP->setNext(m_IPlist);
+				m_IPlist = newIP;
+			}
+			else
+			{
+				EnumeratedIP *p = m_IPlist;
+				while (p->getNext() && p->getNext()->getIP() < newIP->getIP())
+				{
+					p = p->getNext();
+				}
+				newIP->setNext(p->getNext());
+				p->setNext(newIP);
+			}
+		}
+		
+	}
+	freeifaddrs(ifaddr);
+#endif
+
+	return m_IPlist;
+}
+
+AsciiString IPEnumeration::getMachineName( void )
+{
+	if (!m_isWinsockInitialized)
+	{
+#ifdef _WIN32
+		WORD verReq = MAKEWORD(2, 2);
+		WSADATA wsadata;
+
+		int err = WSAStartup(verReq, &wsadata);
+		if (err != 0) {
+			return NULL;
+		}
+
+		if ((LOBYTE(wsadata.wVersion) != 2) || (HIBYTE(wsadata.wVersion) !=2)) {
+			WSACleanup();
+			return NULL;
+		}
+#endif
+		m_isWinsockInitialized = true;
+	}
+
+	// get the local machine's host name
+	char hostname[256];
+	if (gethostname(hostname, sizeof(hostname)))
+	{
+		#ifdef _WIN32
+		DEBUG_LOG(("Failed call to gethostname; WSAGetLastError returned %d\n", WSAGetLastError()));
+		#endif
+		return NULL;
+	}
+
+	return AsciiString(hostname);
+}
+
+

@@ -1,0 +1,1098 @@
+﻿ZERO HOUR MOBILE — MASTER HANDOFF / CONTINUATION FILE
+=====================================================
+Date: 2026-08-16
+Purpose: Upload this ONE file into a new ChatGPT/AI conversation and continue the project without losing the important decisions, technical state, touch-control design, Direct Control design, source repositories, paths, known failures, and next step.
+
+IMPORTANT TO THE NEXT AI
+------------------------
+You are taking over as the main programmer for a beginner user. Do NOT make the user repeat the project context. Work from this file.
+
+Preferred workflow:
+1) Inspect the exact current state.
+2) Change the smallest controlled thing.
+3) Build/test.
+4) Read the FIRST real error.
+5) Continue from that exact error.
+
+User strongly prefers:
+- One script/file + one PowerShell command.
+- Ideally one output log file only.
+- Visible progress, not silent scripts.
+- Minimal questions; infer what can safely be inferred.
+- Do not create endless Desktop folders.
+- Do not make the user manually edit code unless unavoidable.
+- Never claim success unless runtime/logs prove it.
+- The user is a beginner and does not know English well, so explain in simple Arabic when talking to them.
+
+PowerShell pitfalls already encountered:
+- Windows PowerShell 5.1.
+- Do NOT use `$args` as a helper parameter name.
+- Do NOT use `$pid` / `$PID` as a normal variable (reserved automatic variable). Use `$gamePid`.
+- Interactive multiline if/elseif pasted line-by-line is fragile.
+- `$ErrorActionPreference = "Stop"` can treat native stderr badly; temporarily switch to Continue around noisy native commands and inspect `$LASTEXITCODE`.
+- `Sort-Object LastWriteTime -Descending, Length -Descending` is invalid in PowerShell 5.1. Use property hash tables or sort one property only.
+
+======================================================================
+1. PROJECT GOAL
+======================================================================
+
+The goal is a REAL native Android port of:
+Command & Conquer: Generals — Zero Hour
+
+Not a fake demo, not a recreated toy world, not streaming from a PC.
+
+The final product should:
+- Run the real Zero Hour/SAGE game logic on Android.
+- Use the user's legally owned original PC game data (.big files).
+- Have a premium touch-control system that can surpass mouse/keyboard for common RTS actions.
+- Preserve the original Zero Hour identity/UI.
+- Add a second gameplay mode called Direct Control where one real selected SAGE unit can be controlled directly like an action game.
+- Eventually have working audio, polished touch, Direct Control, Android stability, and publication-ready packaging.
+
+Current priority is still:
+GET THE REAL GAME RUNNING ON THE USER'S MALI PHONE FIRST.
+Do not start implementing Direct Control before the renderer/runtime baseline is stable.
+
+======================================================================
+2. USER / DEVICE / TOOLCHAIN
+======================================================================
+
+OS / shell:
+- Windows
+- Windows PowerShell 5.1
+
+Phone:
+- Model: Infinix X6873
+- Serial: 143332554S104046
+- ABI: arm64-v8a
+- Android: 16
+- GPU: Mali-G615 MC6
+- GPU driver: 44.1.0
+
+Android package/activity:
+- Package: me.generalsx.zh
+- Activity: me.generalsx.zh/.GameActivity
+
+Android SDK:
+C:\Users\DELL\AppData\Local\Android\Sdk
+
+NDK:
+C:\Users\DELL\AppData\Local\Android\Sdk\ndk\27.1.12297006
+
+NDK version:
+27.1.12297006
+
+Build tools:
+35.0.0
+
+CMake:
+3.31.6
+
+Ninja:
+1.12.1
+
+Android Studio Java/JBR:
+C:\Program Files\Android\Android Studio\jbr
+Java 21.0.9 in JBR
+
+System Java is newer (Java 25), but Android build should prefer Android Studio JBR.
+
+Python:
+C:\Users\DELL\AppData\Local\Programs\Python\Python314\python.exe
+
+Meson:
+C:\Users\DELL\AppData\Roaming\Python\Python314\Scripts\meson.exe
+Version seen: 1.12.0
+
+glslang:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\glslang-main-tot\bin\glslang.exe
+Version seen: 16.5.0
+
+Git touch:
+C:\Program Files\Git\usr\bin\touch.exe
+
+======================================================================
+3. IMPORTANT WORKSPACES / PATHS
+======================================================================
+
+PRIMARY CLEAN CURRENT REPO:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN
+
+Current Android folder:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\android
+
+Native staged libraries:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\android\app\src\main\jniLibs\arm64-v8a
+
+Important staged libraries:
+- libmain.so
+- libSDL3.so
+- libdxvk_d3d8.so
+- libdxvk_d3d9.so
+- other packaged runtime libraries
+
+Current custom DXVK source:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\actual-dxvk-source
+
+Current DXVK Meson build:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\build-android-real
+
+Full cloned Molotov repo:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\dxvk
+(Note: despite folder naming, this is the full Molotov Generals Android repo that was initially selected by mistake before discovering its pinned DXVK submodule.)
+
+DXVK cross file:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\meson-android-arm64-real.txt
+
+SDL3 WSI source currently relevant:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\actual-dxvk-source\src\wsi\sdl3\wsi_platform_sdl3.cpp
+
+DXVK feature requirement source currently relevant:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\actual-dxvk-source\src\dxvk\dxvk_device_info.cpp
+
+APK:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\android\app\build\outputs\apk\debug\app-debug.apk
+
+Older project/workspaces that exist:
+- C:\Users\DELL\AndroidStudioProjects\ZeroHourMobile
+- GeneralsZH-Android-LiveDispatch-V1
+Do NOT casually switch workspaces. The current renderer work is on GeneralsZH-Android-CLEAN.
+
+======================================================================
+4. GAME DATA
+======================================================================
+
+User's PC game-data source:
+C:\Users\DELL\Desktop\ZeroHour_Mobile_Assets
+
+Do NOT delete or modify the source data.
+
+Android game-data target:
+ /sdcard/Android/data/me.generalsx.zh/files/GameData/Data
+
+Earlier scripts copied the full source .big set to the phone.
+The engine has already successfully read large amounts of INI/CSF/game data from the device, so missing GameData is NOT the current renderer blocker.
+
+Core/expected BIGs include:
+- INI.big
+- INIZH.big
+- Textures.big
+- TexturesZH.big
+- Audio.big
+- AudioZH.big
+- Music.big
+- MusicZH.big
+- MapsZH.big
+- Terrain.big
+- TerrainZH.big
+- W3D.big
+- W3DZH.big
+- English.big
+- EnglishZH.big
+- Window.big
+- WindowZH.big
+- ShadersZH.big
+- Patch.big
+- PatchZH.big
+- AudioEnglish.big
+- AudioEnglishZH.big
+- Speech.big
+- SpeechEnglish.big
+- SpeechEnglishZH.big
+- SpeechZH.big
+- W3DEnglishZH.big
+- shaders.big
+
+Known optional/mod/UI BIGs in source include:
+- !HotkeysLeikeze.big
+- !HotkeysLeikezeGermanIndicatorsZH.big
+- !HotkeysLeikezeZH.big
+- 310_ExpandedLANLobbyMenu.big
+- 311_ExpandedLANLobbyMenu.big
+- 340_ControlBarPro-Fix1080ZH.big
+- 340_ControlBarPro1080ZH.big
+- 340_ControlBarProZH.big
+- 341_ControlBarPro.big
+- 400_ControlBarHDEnglishZH.big
+- 401_ControlBarHD.big
+- 990_DecalsZH.big
+- CustomContentMaps.big
+- GensecZH.big
+- gensec.big
+- maps.big
+
+IMPORTANT:
+The internal Android GameData currently contains all source BIGs, including mods/UI packs, because an earlier script copied all .big files.
+This is not the current blocker.
+If later an INI/UI conflict appears after renderer is fixed, remove ONLY optional/mod files from the phone copy, not from the PC source.
+
+======================================================================
+5. SOURCE REPOSITORIES / REFERENCES
+======================================================================
+
+PRIMARY ANDROID PORT:
+https://github.com/tarek369/GeneralsZH-Android
+
+Purpose:
+- Main Android port baseline used for current app/runtime.
+- Native arm64 Android.
+- D3D8 -> DXVK -> Vulkan.
+- SDL3.
+- Touch support.
+- Package me.generalsx.zh.
+- Contains android.md engineering notes.
+
+VERY IMPORTANT ORIGINAL/OPEN SAGE SOURCE:
+https://github.com/TheSuperHackers/GeneralsGameCode
+
+Purpose:
+- Reference for official Generals/Zero Hour SAGE game engine/game logic.
+- Use when porting/reconciling original behavior and GameLogic.
+
+MALI-ORIENTED ANDROID PORT / REFERENCE:
+https://github.com/molotovgit/CnC-Generals-ZeroHour-Android
+
+Purpose:
+- Tested by its author on Mali-G57.
+- Claims main menu/skirmish/campaign playability on Mali-G57.
+- Contains Android/Mali-specific engineering notes.
+- Documents mobile workarounds: software BC/DXT path, descriptor/nullDescriptor behavior, serialized pipeline creation, clip-plane issues, VK_SUBOPTIMAL tolerance, etc.
+- Uses a different package id in its own project; do not blindly replace the current Tarek project with it unless intentionally changing baseline.
+
+DXVK FORK PINNED/USED BY MOLTOV BUILD:
+https://github.com/fbraz3/dxvk.git
+
+Current clone:
+C:\Users\DELL\AndroidStudioProjects\GeneralsZH-Android-CLEAN\tools\mali-dxvk\actual-dxvk-source
+
+UPSTREAM DXVK:
+https://github.com/doitsujin/dxvk
+
+SDL:
+https://github.com/libsdl-org/SDL
+
+GLSLANG:
+https://github.com/KhronosGroup/glslang
+
+Historical/source tree used locally:
+ZeroHour_Source_Full
+Important original files previously reviewed:
+- ArchiveFile.h/.cpp
+- ArchiveFileSystem.h/.cpp
+- StreamingArchiveFile.h/.cpp
+- Win32BIGFile.h/.cpp
+- Win32BIGFileSystem.h/.cpp
+- GameEngine.h/.cpp
+- FileSystem.cpp
+- MemoryInit.cpp
+
+Previous official-port compile snapshot:
+app/src/main/cpp/sage/official_port_v1/source_snapshot/GameLogic/AI/AIPathfind.cpp
+
+Historical source flags/log state from an older port attempt:
+- PORT_TARGET_LINKED_TO_ZEROHOUR_CORE=False
+- LIVE_GAMELOGIC_DISPATCH=DISABLED
+- FINAL_OFFICIAL_RUNTIME_LINKED=False
+
+That older LiveDispatch effort is NOT the immediate current blocker. Current path is to first get Tarek-based real game runtime rendering on this Mali device.
+
+======================================================================
+6. CURRENT BUILD / RUNTIME FACTS
+======================================================================
+
+The engine itself has previously built successfully.
+Known sizes from earlier build:
+- libmain.so about 93.13 MB
+- libgamespy.so about 3.36 MB
+- libopenal.so about 19.15 MB
+- libSDL3.so about 9.51 MB
+
+The game boots far enough to:
+- enter SDL_main
+- initialize filesystem
+- open archives
+- load CSFs
+- load large amounts of Zero Hour INI data
+- initialize many engine subsystems
+- create SDL window
+- enter WW3D / DX8Wrapper
+- load libdxvk_d3d8.so
+- call Direct3DCreate8
+- initialize DXVK
+- find Vulkan
+- see the Mali-G615 MC6 GPU
+
+So:
+- App startup works much farther than before.
+- GameData is being read.
+- D3D8 entry point is working.
+- Vulkan loader works.
+- Current blocker is GPU feature compatibility inside DXVK, not missing game data.
+
+======================================================================
+7. IMPORTANT PAST BLOCKERS AND WHAT WAS FIXED
+======================================================================
+
+A. Initial Scudo / allocator crash
+----------------------------------
+Earlier the engine died around Android SDL storage path ownership.
+A likely/observed startup blocker involved freeing paths returned by:
+- SDL_GetAndroidExternalStoragePath()
+- SDL_GetAndroidInternalStoragePath()
+
+A patch removed the problematic SDL_free calls.
+After that the engine progressed deep into INI loading and renderer startup.
+Do not casually reintroduce those frees.
+
+Also important:
+Tarek's engineering notes state:
+RTS_GAMEMEMORY_ENABLE=OFF
+is required for the Android build because the original game DMA/custom allocator conflicts with libc++ / external allocations.
+
+However the current cache had:
+RTS_GAMEMEMORY_ENABLE=ON
+
+This is a FUTURE stability risk, not the current renderer blocker.
+If Scudo/allocator crashes return after rendering starts, rebuild engine with RTS_GAMEMEMORY_ENABLE=OFF according to Tarek's Android engineering notes.
+
+B. First renderer blocker: VK_EXT_robustness2
+---------------------------------------------
+The packaged Tarek DXVK 2.6.0 reached the Mali GPU but failed with:
+Required Vulkan extension VK_EXT_robustness2 not supported
+DxvkAdapter: Failed to create device
+
+That proved the official packaged DXVK did not support this Mali driver sufficiently.
+
+Therefore we started building a Mali-oriented/fbraz3 DXVK.
+
+C. DXVK build tooling blockers that are ALREADY SOLVED
+------------------------------------------------------
+Solved:
+- glslang
+- SPIRV-Headers
+- Vulkan-Headers
+- recursive submodules
+- dxbc-spirv
+- libdisplay-info
+- pkg-config shim for SDL3
+- Windows `touch` program for Meson
+
+DXVK 2.7.1 now builds successfully with about 370 Ninja steps.
+
+Confirmed successful output:
+...\build-android-real\src\d3d8\libdxvk_d3d8.so
+...\build-android-real\src\d3d9\libdxvk_d3d9.so
+
+D. SDL3 WSI loader
+------------------
+New DXVK 2.7.1 originally failed:
+SDL3 WSI: Failed to load SDL3 DLL.
+
+Audit proved source uses:
+LoadLibraryA("libSDL3.so")
+
+libSDL3.so's ELF SONAME is also:
+libSDL3.so
+
+We added an Android-specific direct POSIX loader path in:
+src/wsi/sdl3/wsi_platform_sdl3.cpp
+
+The working runtime log later proved:
+ZH_ANDROID_SDL3_DLOPEN_OK
+
+This is IMPORTANT:
+The Android SDL3 direct-dlopen patch is proven working and should be retained while rebuilding DXVK.
+
+The intended Android-only concept is:
+- dlopen("libSDL3.so", RTLD_NOW | RTLD_LOCAL)
+- cast the handle into the type expected by the existing DXVK WSI code
+- retain GetProcAddress function loading afterward
+- log failure/success
+
+E. Native library packaging / bad ELF magic
+--------------------------------------------
+At one point Android logcat showed:
+libdxvk_d3d9.so has bad ELF magic: 504b0304
+
+504B0304 = ZIP signature, not ELF.
+
+This was treated as an APK/native-library packaging issue.
+
+Repair verified:
+- staged d3d8/d3d9/SDL3 begin with ELF magic 7F454C46
+- JNI packaging uses non-legacy packaging
+- libraries inside APK are stored/uncompressed and aligned
+- after repair the log explicitly said:
+BAD ELF / ZIP-MAGIC BLOCKER: GONE
+
+Do NOT regress this.
+
+Important Gradle packaging setting:
+useLegacyPackaging false
+
+When packaging:
+- verify libdxvk_d3d8.so
+- libdxvk_d3d9.so
+- libSDL3.so
+inside APK are real ELF files (magic 7F454C46)
+- verify they are ZIP_STORED/uncompressed
+- verify zipalign/page alignment, preferably 16K-aware for modern Android.
+
+======================================================================
+8. EXACT LATEST CONFIRMED RUNTIME STATE
+======================================================================
+
+LATEST CONFIRMED SUCCESSFUL PATH BEFORE THE CURRENT PATCH:
+- libdxvk_d3d8.so loads.
+- Direct3DCreate8 is found/called.
+- DXVK version: 2.7.1
+- Build: aarch64 clang 18.0.2
+- Android SDL3 direct dlopen: SUCCESS
+  Log:
+  ZH_ANDROID_SDL3_DLOPEN_OK
+- Vulkan loader found vkGetInstanceProcAddr.
+- Enabled Android WSI extensions included:
+  VK_EXT_surface_maintenance1
+  VK_KHR_android_surface
+  VK_KHR_get_surface_capabilities2
+  VK_KHR_surface
+- GPU found:
+  Mali-G615 MC6
+  driver 44.1.0
+
+CURRENT EXACT GPU GATE:
+Skipping: Device does not support required feature 'dualSrcBlend'
+DXVK: No adapters found.
+A Vulkan 1.3 capable setup is required.
+
+The exact source occurrence was found:
+File:
+...\actual-dxvk-source\src\dxvk\dxvk_device_info.cpp
+
+Around line 797:
+ENABLE_FEATURE(core.features, dualSrcBlend, true),
+
+Nearby requirements include:
+- depthBiasClamp true
+- depthBounds false
+- depthClamp true
+- drawIndirectFirstInstance false
+- dualSrcBlend true   <-- CURRENT GATE
+- fillModeNonSolid true
+- fragmentStoresAndAtomics false
+- fullDrawIndexUint32 true
+- geometryShader true
+- imageCubeArray true
+- independentBlend true
+- logicOp false
+- multiDrawIndirect true
+- multiViewport true
+- occlusionQueryPrecise true
+
+======================================================================
+9. THE VERY LATEST SCRIPT / NEXT STEP
+======================================================================
+
+First dualSrc script:
+ZeroHour_MALI_DUALSRC_FIX.ps1
+
+It FAILED SAFELY before building because its patcher looked only for:
+dualSrcBlend = true
+or VK_TRUE
+
+But actual source is:
+ENABLE_FEATURE(core.features, dualSrcBlend, true),
+
+No source was patched by that failed attempt.
+
+A corrected script was then generated:
+ZeroHour_MALI_DUALSRC_FIX_V2.ps1
+
+LATEST STATUS:
+THE V2 SCRIPT HAS BEEN GENERATED BUT HAS NOT YET BEEN CONFIRMED RUN IN THIS CONVERSATION.
+
+Its intended patch is Android-only:
+
+#if defined(__ANDROID__)
+  // ZEROHOUR_ANDROID_MALI_DUALSRC_OPTIONAL
+  ENABLE_FEATURE(core.features, dualSrcBlend, false),
+#else
+  ENABLE_FEATURE(core.features, dualSrcBlend, true),
+#endif
+
+Why Android-only:
+- Do not globally change desktop/upstream DXVK behavior.
+- Current app path is D3D8 -> D3D9.
+- We only want to remove this adapter enumeration gate for the Android/Mali port and observe the next real requirement.
+
+The V2 script is designed to:
+- require the proven Android SDL3 direct-dlopen patch to still exist
+- patch only the exact dualSrcBlend macro line
+- incremental rebuild DXVK only
+- verify D3D8/D3D9 ELF
+- stage both libs
+- preserve useLegacyPackaging false
+- Gradle clean/package only
+- verify APK JNI libs are ELF + uncompressed + aligned
+- install with adb install -r -d
+- preserve GameData
+- launch
+- report the NEXT missing feature/extension
+
+WHEN CONTINUING IN NEW CHAT:
+1) Ask user to upload/run the existing ZeroHour_MALI_DUALSRC_FIX_V2.ps1 if they still have it, OR regenerate a clean equivalent.
+2) Do NOT re-clone DXVK.
+3) Do NOT rebuild libmain.so.
+4) Do NOT recopy 2GB GameData.
+5) Read the single resulting log:
+C:\Users\DELL\Desktop\ZeroHour_MALI_LOG.txt
+6) Fix only the first new error.
+
+Likely next outcomes:
+- If dualSrcBlend disappears and another feature is missing (fillModeNonSolid, geometryShader, etc.), inspect whether it is genuinely needed by D3D8/D3D9 before relaxing it.
+- If we return to VK_EXT_robustness2 / robustBufferAccess2 / nullDescriptor, DO NOT blindly rebuild the same tree again. At that point compare exact Molotov Mali fallback patches / build baseline.
+- If device creation succeeds but terrain is magenta/corrupt, investigate Molotov software BC/DXT terrain path.
+- If shader/pipeline/clip-distance crash occurs, use Molotov Mali shader/clip-plane/pipeline serialization work.
+- If allocator/Scudo crash returns, rebuild engine with RTS_GAMEMEMORY_ENABLE=OFF.
+- If audio is silent, audio remains a separate later task.
+
+======================================================================
+10. IMPORTANT MALI REFERENCE NOTES
+======================================================================
+
+Molotov's Mali-oriented docs/port are important because they report a working Mali-G57 baseline.
+
+Mobile/Mali issues documented by that project include:
+- software BC/DXT decoding for terrain/textures when native handling is insufficient
+- dummy descriptor behavior/fallback when nullDescriptor support is missing
+- handling systems where robustness2/nullDescriptor assumptions do not hold
+- serialized pipeline creation for driver stability
+- clip-plane / shader compatibility changes
+- tolerate persistent VK_SUBOPTIMAL_KHR
+- Mali-specific renderer fixes
+
+IMPORTANT:
+The current fbraz3 checkout was NOT yet proven at runtime to contain every one of those Molotov fallbacks.
+If robustness2/nullDescriptor returns after dualSrcBlend is cleared, STOP assuming the current fbraz3 tree automatically has the needed Mali patch.
+Inspect exact Molotov commits/patches or build the known Molotov baseline intentionally.
+
+Do not use the previously mentioned Fadi/Turnip-oriented path for this phone as the primary solution; that path is mainly Adreno/Turnip-focused and the current phone is Mali.
+
+======================================================================
+11. AUDIO STATUS
+======================================================================
+
+Audio is important to the user, but NOT yet proven working end-to-end.
+
+Tarek current source has/had OpenAL and Android audio handling and forces an Android backend such as Oboe in current source.
+Old public README historically marked playback as incomplete.
+
+Molotov reports working audio via an Android path (OpenSL ES in its notes).
+
+Current rule:
+Do not claim audio is fixed until the user actually hears it in-game.
+
+First finish renderer/game boot.
+Then test:
+- menu music
+- unit speech
+- SFX
+- volume/mixing
+- pause/resume audio
+- app background/foreground
+
+======================================================================
+12. NORMAL RTS TOUCH CONTROL — PROJECT CONSTITUTION
+======================================================================
+
+The user approved a premium touch-control design with these hard rules:
+
+A. PRESERVE ZERO HOUR
+---------------------
+- Original Zero Hour Command Bar and Minimap are protected.
+- Do not permanently redesign the original UI.
+- Added touch UI must keep Zero Hour visual DNA.
+- New buttons/elements must look modern and impressive but still unmistakably Zero Hour.
+- Extra controls should be transient/contextual, not permanent clutter.
+- Do not change game rules just to make touch easier.
+
+B. TOUCH SHOULD REDUCE APM
+--------------------------
+The goal is not merely emulate a mouse.
+The goal is to make touch natural, fast, low-APM, and potentially better than mouse/keyboard for common mobile interactions.
+
+C. INPUT ARCHITECTURE
+---------------------
+Approved conceptual pipeline:
+
+Raw Touch
+   ->
+Gesture Features
+   ->
+Context
+   ->
+Intent
+   ->
+Safety
+   ->
+SAGE Command
+
+Meaning:
+- Raw touch is not allowed to directly mutate game state.
+- Gestures are interpreted.
+- Current unit/target/UI context is considered.
+- The system resolves a gameplay intent.
+- Safety checks validate it.
+- Only then is a real SAGE command issued.
+
+This layer should be:
+- deterministic
+- replay-safe
+- multiplayer/network-safe
+- fail-closed
+- based on real SAGE commands, not fake local transforms
+
+D. APPROVED PREMIUM TOUCH FEATURES
+----------------------------------
+
+1) Precision Target Lens
+Approved.
+Purpose:
+- Improve precise targeting on a small touchscreen.
+- Used when exact target selection is difficult.
+- It is an assistive transient overlay, not a permanent UI replacement.
+- It must preserve the actual underlying SAGE target/command rules.
+
+2) Direct Formation Preview
+Approved.
+Purpose:
+- Before committing a formation/movement gesture, show a temporary visual preview of the intended formation/destination.
+- The preview disappears after commit/cancel.
+- It should not create a fake separate formation system; final order must become real SAGE commands.
+
+3) Quick Orders Fan
+Approved as a transient quick-order UI.
+Rules:
+- Appears temporarily only when context calls for it.
+- Visual design must look like modernized Zero Hour-native controls.
+- Must not permanently alter the Command Bar.
+- Final action issues real existing game commands.
+
+4) Drag-to-Target
+Approved.
+Concept:
+- Original Zero Hour command buttons remain.
+- A touch user can drag from an original/context command toward the intended world target rather than requiring awkward multi-step mouse emulation.
+- The touch layer resolves target context then issues the real SAGE order.
+
+5) Build Placement Assistant
+Approved.
+Core interaction:
+- Tap original build action = normal build action.
+- Hold = enter a richer placement/rotation interaction.
+- This assists touchscreen placement while preserving real building placement rules.
+- The overlay/assistant is transient.
+
+6) Touch Intent Preview
+Approved.
+Purpose:
+- Before a potentially ambiguous touch command commits, temporarily show what the system thinks the user intends.
+- Helps prevent wrong move/attack/target/build actions.
+- Must be fast and non-obtrusive.
+
+7) Smart Haptic Language
+Approved.
+Use vibration/haptics as a compact feedback language.
+Examples of categories that may be distinguished:
+- selection/lock
+- valid command
+- invalid command
+- target acquisition
+- destructive/high-risk action
+Keep it subtle; it is feedback, not gameplay logic.
+
+8) Waypoint Path Echo
+Approved as part of the touch constitution.
+Known rule:
+- It is a transient Zero Hour-styled feedback element.
+- It must preserve original waypoint/command logic and determinism.
+Detailed trigger/visual specification was not fully recoverable from prior chat context, so do not invent irreversible behavior without checking with the user if implementation reaches this feature.
+
+9) Clutch Intent Projection
+Approved as part of the touch constitution.
+Known rule:
+- It is a transient intent/feedback element under the same Zero Hour-native design rules.
+- It must not alter game rules.
+Detailed trigger/visual specification was not fully recoverable from prior chat context, so preserve the concept/name and avoid silently redefining it.
+
+10) Destructive-command protection
+Part of the approved constitution.
+The touch-intent/safety layer should protect against accidental high-impact/destructive commands.
+It must fail closed on ambiguity rather than issuing a dangerous accidental order.
+
+E. UI RULE
+----------
+Any added touch button:
+- Zero Hour visual identity
+- premium/modern execution
+- appears only when needed
+- disappears when not needed
+- no permanent Minecraft-like mobile button wall
+
+======================================================================
+13. DIRECT CONTROL MODE — APPROVED DESIGN
+======================================================================
+
+This is a SECOND gameplay mode inside the same real Zero Hour match.
+
+Core principle:
+The player selects one real SAGE unit and directly controls THAT SAME OBJECT.
+No fake demo unit.
+No DemoWorld.
+No local fake physics world.
+No duplicated unit.
+
+The real object must retain:
+- Object identity
+- HP
+- team
+- weapons
+- weapon states
+- locomotor
+- speed/turn limits
+- collisions
+- world interactions
+- AI/game state
+- target state
+- SAGE authority
+
+A. ENTER CONDITION
+------------------
+Direct Control button should become available only when:
+- exactly ONE unit is selected
+- the selected unit is a valid/supported controllable unit
+- game state allows it
+
+The button/UI is contextual/transient, consistent with the touch constitution.
+
+B. WHILE DIRECT CONTROL IS ACTIVE
+---------------------------------
+- Only the selected unit is directly controlled by the player.
+- Rest of army continues normally.
+- Other AI continues normally.
+- RTS simulation continues.
+- Do not freeze the world.
+- Do not detach the unit from SAGE.
+
+C. UNIT-SPECIFIC CONTROL PROFILES
+---------------------------------
+
+1) Infantry
+Approved feel:
+- Counter-Strike-like / FPS-style control.
+- First-person-oriented experience.
+- Centered reticle.
+- Right-side drag/look for aiming/camera.
+- Movement controls appropriate for mobile FPS.
+- Primary weapon in V1.
+- Special abilities later.
+
+2) Tanks / Ground Vehicles
+Approved feel:
+- Cinematic third-person chase camera.
+- Direct vehicle steering/movement.
+- Aim using camera/reticle.
+- Independent turret aiming where the actual unit/weapon architecture supports it.
+- Primary weapon firing in V1.
+- Preserve SAGE Locomotor, weapon cooldown, turret limits, speed, turn rate, etc.
+
+3) Helicopters
+Approved:
+- Full direct vehicle/flight control appropriate to helicopter behavior.
+- Premium third-person chase presentation.
+- Preserve real game unit/locomotor constraints.
+- Primary weapon V1; specials later.
+
+4) Aircraft
+Hard requirement from user:
+- TRUE free piloting.
+- Not just clicking a destination.
+- Direct flight control.
+- Premium chase-camera experience (cockpit-style view can be considered as an experience layer if compatible, but third-person chase is the agreed baseline).
+- Preserve real aircraft object and SAGE authority.
+
+D. DIRECT CONTROL HUD
+---------------------
+User approved a minimal tactical HUD.
+
+While Direct Control is active:
+- Hide most of the bulky RTS HUD.
+- Keep a small minimap.
+- Keep resources in a compact form.
+- Show controlled unit health.
+- Show reticle.
+- Show weapon state.
+- Show only contextual control buttons needed for that unit.
+- Show an elegant Exit Direct Control action.
+- Minimap can temporarily expand without forcing the user to leave Direct Control.
+
+Look/feel:
+- premium action game
+- Zero Hour identity
+- not Minecraft-like
+- no giant permanent generic mobile buttons
+
+E. EXIT / FALLBACK RULES
+------------------------
+Return cleanly to normal RTS mode when:
+- user manually exits
+- controlled unit dies
+- selected/controlled object becomes invalid
+- map/match ends
+- state transition makes direct control invalid
+- pause/disconnect/network invalidation requires it
+
+The transition must never leave a ghost-controlled object or fake local state.
+
+F. WEAPON / ABILITY SCOPE
+-------------------------
+V1:
+- primary weapon/control first
+- core movement/aim/fire
+
+Later:
+- special abilities
+- advanced per-unit commands
+- richer weapon switching if genuinely supported by game data/unit logic
+
+G. DIRECT CONTROL ARCHITECTURE
+------------------------------
+Approved class/design skeleton:
+
+DirectControlManager
+DirectControlSession
+DirectControlProfile
+DirectControlInput
+DirectControlCamera
+DirectControlHudState
+
+Unit adapters/controllers conceptually:
+- Infantry controller
+- GroundVehicle/Tank controller
+- Helicopter controller
+- Aircraft controller
+
+Input chain:
+Touch / Gamepad / Keyboard
+       ->
+DirectControlInput
+       ->
+DirectControlManager
+       ->
+DirectControlProfile
+       ->
+Unit Controller / Adapter
+       ->
+REAL SAGE GameLogic / Object / Locomotor / Weapon / TurretAI
+
+Do not write transforms directly every frame as the authoritative gameplay method.
+
+H. NETWORKING / DETERMINISM
+---------------------------
+Direct Control must eventually remain compatible with SAGE determinism.
+
+Agreed approach:
+- Convert direct-control input into quantized gameplay input/command state.
+- Apply it at fixed simulation ticks.
+- Keep SAGE simulation authoritative.
+- Do NOT network raw world transforms every frame.
+- Do NOT create a parallel non-deterministic physics authority.
+- Replay/network safety matters from the architecture stage, even if multiplayer implementation comes later.
+
+I. IMPLEMENTATION ORDER
+-----------------------
+Agreed rollout order:
+
+Phase A:
+- architecture
+- state machine
+- Direct Control session lifecycle
+- input abstraction
+- camera abstraction
+- minimal tactical HUD
+- safe enter/exit logic
+
+Phase B / first real unit:
+TANK FIRST
+
+Then:
+1. Tank / ground vehicle
+2. Infantry
+3. Helicopter
+4. Aircraft
+
+Why tank first:
+- easiest useful bridge between RTS locomotor and direct directional control
+- validates real SAGE object control without needing full FPS/free-flight complexity immediately
+
+======================================================================
+14. OLD OFFICIAL GAMELOGIC / LIVE DISPATCH WORK
+======================================================================
+
+Before switching focus to the working Tarek runtime, the project also had an official SAGE port effort.
+
+Workspace:
+C:\Users\DELL\AndroidStudioProjects\ZeroHourMobile
+
+Historical successful compile gate:
+AIPathfind official compile gate:
+PASSED_3_OF_3
+
+Report example:
+diagnostics/official_sage_aipathfind_compile_gate_v1_fixed_20260807_110428.txt
+
+Historical requested integration goals:
+1) Full GameLogicDispatcher.cpp enabling LIVE_GAMELOGIC_DISPATCH
+2) Full ZeroHourCoreLink.cpp linking PORT_TARGET to ZERO_HOUR_CORE
+3) Apply 21 portability fixes in AIPathfind.cpp
+4) Build/run
+
+Historical flags showed:
+PORT_TARGET_LINKED_TO_ZEROHOUR_CORE=False
+LIVE_GAMELOGIC_DISPATCH=DISABLED
+FINAL_OFFICIAL_RUNTIME_LINKED=False
+
+A Full Engine LiveDispatch patch attempt failed at:
+cmake/meson-android-aarch64-cross.ini.in:18
+
+There was also a Graphics Runtime Audit and a failed Mali Display Fix script due an exact logging-block matcher.
+
+IMPORTANT FOR NEXT AI:
+Do not confuse this older LiveDispatch effort with the immediate task.
+Current priority is getting the already-booting Tarek-based real Zero Hour Android runtime past Mali DXVK requirements.
+Once the baseline game is actually playable, then merge/advance official SAGE logic/direct-control work carefully.
+
+======================================================================
+15. THINGS NOT TO DO
+======================================================================
+
+Do NOT:
+- Re-copy 2GB GameData on every attempt.
+- Re-clone the DXVK source unless the current tree is proven unusable.
+- Rebuild libmain.so for every renderer tweak.
+- Claim the game is "working" just because process exists briefly.
+- Treat PID alone as success.
+- Use a fake DemoWorld instead of SAGE.
+- Write direct-control unit transforms as the network authority.
+- Destroy the original Zero Hour HUD.
+- Add permanent generic mobile button walls.
+- Modify game rules to hide touch problems.
+- Delete the user's original .big source.
+- Switch to an Adreno/Turnip-only approach on this Mali device.
+- Keep rebuilding the same fbraz3 DXVK if robustness2/nullDescriptor returns without verifying the actual Mali fallback patch exists.
+
+======================================================================
+16. SUCCESS CRITERIA FOR THE CURRENT RUNTIME PHASE
+======================================================================
+
+A runtime attempt counts as progress/success only if logs prove each stage.
+
+Desired stages:
+1) APK starts.
+2) SDL_main enters.
+3) GameData loads.
+4) WW3D/DX8Wrapper enters.
+5) libdxvk_d3d8.so loads.
+6) Direct3DCreate8 works.
+7) SDL3 WSI loads.
+8) Vulkan instance works.
+9) Mali adapter is accepted.
+10) DXVK device is created.
+11) Display initializes.
+12) Main menu renders and stays foreground.
+13) User can interact with menu.
+14) Start skirmish.
+15) Terrain/models render correctly.
+16) Units move/respond.
+17) Audio verified by ear.
+18) Touch baseline verified.
+19) Stability test.
+20) Only then begin Direct Control integration on real game baseline.
+
+Current confirmed stage:
+Reached stage 9 partially:
+GPU is FOUND, but adapter is currently rejected by DXVK because dualSrcBlend is marked required.
+The next action is to run/test the Android-only dualSrcBlend requirement patch.
+
+======================================================================
+17. AFTER DUALSRC — DECISION TREE
+======================================================================
+
+If next log says another core Vulkan feature is missing:
+- inspect the exact source requirement
+- determine if D3D8/D3D9 path truly needs it
+- only relax Android requirement if technically justified
+- do one feature at a time
+
+If next log returns:
+VK_EXT_robustness2
+robustBufferAccess2
+nullDescriptor
+
+Then:
+- Stop blind patching.
+- Diff/inspect Molotov Mali implementation against current fbraz3 checkout.
+- Find exact dummy-descriptor/robustness fallback.
+- Port the actual fallback, not just disable arbitrary safety.
+
+If menu opens but colors/textures are wrong:
+- investigate Molotov software BC/DXT decode and texture format handling.
+
+If menu works but a map/terrain becomes magenta:
+- likely BC/DXT/terrain format path.
+- use Molotov terrain work.
+
+If shader compiler or clip-distance crashes:
+- compare Molotov clip-plane/shader adaptations.
+- consider serialized pipeline creation if Mali driver instability appears.
+
+If the game crashes later with Scudo/allocator:
+- rebuild libmain with RTS_GAMEMEMORY_ENABLE=OFF.
+
+If game runs but no sound:
+- do dedicated Android audio phase.
+- compare current Tarek Oboe/OpenAL route with Molotov working Android audio route.
+
+======================================================================
+18. QUICK HANDOFF MESSAGE TO THE NEXT AI
+======================================================================
+
+Treat this as the current task:
+
+"We already have Zero Hour booting deep into the real engine on an Infinix X6873 / Mali-G615 MC6. GameData loads, D3D8 entry works, custom DXVK 2.7.1 builds, SDL3 direct dlopen is proven working, APK ELF packaging was repaired, Vulkan finds the Mali GPU. The exact current blocker is dxvk_device_info.cpp requiring dualSrcBlend via ENABLE_FEATURE(core.features, dualSrcBlend, true). A V2 Android-only patch script was generated but not yet confirmed run. Continue from that exact point. Do not redo cloning, engine build, GameData copy, SDL3 debugging, or bad-ELF debugging unless logs show regression."
+
+======================================================================
+19. CURRENT ONE-LOG CONVENTION
+======================================================================
+
+Most current runtime scripts use:
+C:\Users\DELL\Desktop\ZeroHour_MALI_LOG.txt
+
+Native packaging repair used:
+C:\Users\DELL\Desktop\ZeroHour_NATIVE_LIB_LOG.txt
+
+Keep future scripts to ONE primary log whenever possible.
+
+======================================================================
+20. FINAL REMINDERS
+======================================================================
+
+- User wants fast progress but accuracy matters more than fake success.
+- User does not want to keep explaining context.
+- Give them one download + one command whenever possible.
+- Keep the original Zero Hour identity.
+- Touch system and Direct Control are approved major features, but current renderer baseline comes first.
+- The user's own legally owned Zero Hour data is already on the phone and demonstrably loading.
+- The current Android runtime is not a fake shell; it is already entering real Zero Hour/SAGE initialization and DXVK.
+- Latest confirmed blocker: dualSrcBlend adapter requirement on Mali-G615 MC6.
+- Latest prepared fix: Android-only `dualSrcBlend` requirement change in dxvk_device_info.cpp, V2 script not yet confirmed executed.

@@ -1,0 +1,51 @@
+[submodule "01_PUBLIC_SOURCES/01_EA_CnC_Generals_Zero_Hour"]
+	path = 01_PUBLIC_SOURCES/01_EA_CnC_Generals_Zero_Hour
+	url = https://github.com/electronicarts/CnC_Generals_Zero_Hour.git
+[submodule "01_PUBLIC_SOURCES/02_GeneralsGameCode"]
+	path = 01_PUBLIC_SOURCES/02_GeneralsGameCode
+	url = https://github.com/TheSuperHackers/GeneralsGameCode.git
+[submodule "01_PUBLIC_SOURCES/03_GeneralsGamePatch"]
+	path = 01_PUBLIC_SOURCES/03_GeneralsGamePatch
+	url = https://github.com/TheSuperHackers/GeneralsGamePatch.git
+[submodule "01_PUBLIC_SOURCES/04_GeneralsDocuments"]
+	path = 01_PUBLIC_SOURCES/04_GeneralsDocuments
+	url = https://github.com/TheSuperHackers/GeneralsDocuments.git
+[submodule "01_PUBLIC_SOURCES/05_EA_CnC_Modding_Support"]
+	path = 01_PUBLIC_SOURCES/05_EA_CnC_Modding_Support
+	url = https://github.com/electronicarts/CnC_Modding_Support.git
+[submodule "01_PUBLIC_SOURCES/06_Tarek_GeneralsZH_Android"]
+	path = 01_PUBLIC_SOURCES/06_Tarek_GeneralsZH_Android
+	url = https://github.com/tarek369/GeneralsZH-Android.git
+[submodule "01_PUBLIC_SOURCES/07_Molotov_Android_Mali"]
+	path = 01_PUBLIC_SOURCES/07_Molotov_Android_Mali
+	url = https://github.com/molotovgit/CnC-Generals-ZeroHour-Android.git
+[submodule "01_PUBLIC_SOURCES/08_GeneralsX"]
+	path = 01_PUBLIC_SOURCES/08_GeneralsX
+	url = https://github.com/fbraz3/GeneralsX.git
+[submodule "01_PUBLIC_SOURCES/09_fbraz3_DXVK"]
+	path = 01_PUBLIC_SOURCES/09_fbraz3_DXVK
+	url = https://github.com/fbraz3/dxvk.git
+[submodule "01_PUBLIC_SOURCES/10_Upstream_DXVK"]
+	path = 01_PUBLIC_SOURCES/10_Upstream_DXVK
+	url = https://github.com/doitsujin/dxvk.git
+[submodule "01_PUBLIC_SOURCES/11_SDL"]
+	path = 01_PUBLIC_SOURCES/11_SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "01_PUBLIC_SOURCES/12_Vulkan_Headers"]
+	path = 01_PUBLIC_SOURCES/12_Vulkan_Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "01_PUBLIC_SOURCES/13_glslang"]
+	path = 01_PUBLIC_SOURCES/13_glslang
+	url = https://github.com/KhronosGroup/glslang.git
+[submodule "01_PUBLIC_SOURCES/14_Oboe"]
+	path = 01_PUBLIC_SOURCES/14_Oboe
+	url = https://github.com/google/oboe.git
+[submodule "01_PUBLIC_SOURCES/15_OpenAL_Soft"]
+	path = 01_PUBLIC_SOURCES/15_OpenAL_Soft
+	url = https://github.com/kcat/openal-soft.git
+[submodule "01_PUBLIC_SOURCES/16_Vulkan_Samples"]
+	path = 01_PUBLIC_SOURCES/16_Vulkan_Samples
+	url = https://github.com/KhronosGroup/Vulkan-Samples.git
+[submodule "01_PUBLIC_SOURCES/17_Android_NDK_Samples"]
+	path = 01_PUBLIC_SOURCES/17_Android_NDK_Samples
+	url = https://github.com/android/ndk-samples.git

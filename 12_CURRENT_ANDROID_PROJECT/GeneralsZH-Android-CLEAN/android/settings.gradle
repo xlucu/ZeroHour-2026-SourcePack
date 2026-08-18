@@ -1,0 +1,23 @@
+// GeneralsX @feature android-port 06/07/2026
+// Minimal Gradle settings: single-module Android project wrapping the native
+// engine build. The native code lives in the parent repo and is built by the
+// top-level CMakeLists.txt referenced from app/build.gradle's externalNativeBuild.
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "GeneralsX-ZH-Android"
+include ':app'

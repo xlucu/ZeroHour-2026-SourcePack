@@ -1,0 +1,72 @@
+﻿warning: in the working copy of 'src/dxvk/dxvk_device_info.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/wsi/sdl3/wsi_platform_sdl3.cpp', LF will be replaced by CRLF the next time Git touches it
+diff --git a/src/dxvk/dxvk_device_info.cpp b/src/dxvk/dxvk_device_info.cpp
+index ef5bf59..4a8f9da 100644
+--- a/src/dxvk/dxvk_device_info.cpp
++++ b/src/dxvk/dxvk_device_info.cpp
+@@ -794,7 +794,12 @@ namespace dxvk {
+       ENABLE_FEATURE(core.features, depthBounds, false),
+       ENABLE_FEATURE(core.features, depthClamp, true),
+       ENABLE_FEATURE(core.features, drawIndirectFirstInstance, false),
++      #if defined(__ANDROID__)
++      // ZEROHOUR_ANDROID_MALI_DUALSRC_OPTIONAL
++      ENABLE_FEATURE(core.features, dualSrcBlend, false),
++#else
+       ENABLE_FEATURE(core.features, dualSrcBlend, true),
++#endif
+       ENABLE_FEATURE(core.features, fillModeNonSolid, true),
+       ENABLE_FEATURE(core.features, fragmentStoresAndAtomics, false),
+       ENABLE_FEATURE(core.features, fullDrawIndexUint32, true),
+diff --git a/src/wsi/sdl3/wsi_platform_sdl3.cpp b/src/wsi/sdl3/wsi_platform_sdl3.cpp
+index 9975cda..751fd3f 100644
+--- a/src/wsi/sdl3/wsi_platform_sdl3.cpp
++++ b/src/wsi/sdl3/wsi_platform_sdl3.cpp
+@@ -7,20 +7,47 @@
+ 
+ #include <SDL3/SDL_vulkan.h>
+ 
++#if defined(__ANDROID__)
++// ZEROHOUR_ANDROID_SDL3_HEADERS
++#include <dlfcn.h>
++#include <cstdio>
++#endif
++
+ namespace dxvk::wsi {
+ 
+   Sdl3WsiDriver::Sdl3WsiDriver() {
++#if defined(__ANDROID__)
++    // ZEROHOUR_ANDROID_SDL3_DLOPEN_BEGIN
++    dlerror();
++    void* zhSdlHandle = dlopen("libSDL3.so", RTLD_NOW | RTLD_LOCAL);
++    libsdl = reinterpret_cast<HMODULE>(zhSdlHandle);
++
++    if (libsdl == nullptr) {
++      const char* zhDlError = dlerror();
++      std::fprintf(stderr,
++        "ZH_ANDROID_SDL3_DLOPEN_FAILED: %s\n",
++        zhDlError ? zhDlError : "(dlerror returned null)");
++      std::fflush(stderr);
++      throw DxvkError("SDL3 WSI: Android dlopen(libSDL3.so) failed.");
++    }
++
++    std::fprintf(stderr, "ZH_ANDROID_SDL3_DLOPEN_OK\n");
++    std::fflush(stderr);
++    // ZEROHOUR_ANDROID_SDL3_DLOPEN_END
++#else
+     libsdl = LoadLibraryA( // FIXME: Get soname as string from meson
+ #if defined(_WIN32)
+         "SDL3.dll"
+ #elif defined(__APPLE__)
+         "libSDL3.0.dylib"
+ #else
+-        "libSDL3.so.0"
++        "libSDL3.so"
+ #endif
+       );
++
+     if (libsdl == nullptr)
+       throw DxvkError("SDL3 WSI: Failed to load SDL3 DLL.");
++#endif
+ 
+     #define SDL_PROC(ret, name, params) \
+       name = reinterpret_cast<pfn_##name>(GetProcAddress(libsdl, #name)); \

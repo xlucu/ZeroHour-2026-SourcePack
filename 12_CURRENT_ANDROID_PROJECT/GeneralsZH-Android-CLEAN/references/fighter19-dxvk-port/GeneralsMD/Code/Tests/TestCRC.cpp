@@ -1,0 +1,62 @@
+#include <gtest/gtest.h>
+
+#include "Lib/BaseType.h"
+#include "matrix3d.h"
+
+#include "Common/XferCRC.h"
+
+/*
+
+
+-exec p turnPos
+$7 = {x = -249.418137, y = 1604.44214, z = 18.75}
+-exec p relAngle
+$8 = -0.841932654
+-exec p trackPosDelta
+$9 = {x = 163.638657, y = -162.13501, z = 0}
+
+Original matrix of object
+$1 = {Row = {{X = 1, Y = 0, Z = 0, W = -209.418137}, {X = 0, Y = 1, Z = 0, W = 1604.44214}, {X = 0, Y = 0, Z = 1, W = 18.75}}}
+*/
+
+TEST(CRC, Matrix)
+{
+  Matrix3D mtxObj;
+  mtxObj.Set(1,0,0,-209.418137f,
+             0,1,0,1604.44214f,
+             0,0,1,18.75f);
+  Coord3D turnPos = {-249.418137f, 1604.44214f, 18.75f};
+  Coord3D trackPosDelta = {163.638657f, -162.13501f, 0};
+  Real relAngle = -0.841932654f;
+
+	Matrix3D mtx;
+	Matrix3D tmp(1);
+	tmp.Translate(turnPos.x, turnPos.y, 0);
+	tmp.Translate(trackPosDelta.x, trackPosDelta.y, 0);
+	tmp.In_Place_Pre_Rotate_Z(relAngle );
+
+	tmp.Translate(-turnPos.x, -turnPos.y, 0);
+
+
+	mtx.mul(tmp, mtxObj);
+  
+
+  XferCRC crc;
+  crc.xferMatrix3D(&mtx);
+  EXPECT_EQ(crc.getCRC(), 0xC9515EA7);
+}
+
+TEST(CRC, atan2)
+{
+  // Volatile to prevent compiler optimizations that hide the issue
+  // This test currently fails with Clang 18.1.3 and 19.1.1 on x86_64
+  // but succeeds on ARM64 with Clang 19.1.7
+  volatile Real x = -112.772949f;
+  volatile Real y = 100.69194f;
+  // This is actually std::atan2(y, x); and uses atan2f behind the scenes
+  Real a = atan2(x, y);
+
+  XferCRC crc;
+  crc.xferReal(&a);
+  EXPECT_EQ(crc.getCRC(), 0xBF5788E7);
+}

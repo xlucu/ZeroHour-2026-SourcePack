@@ -1,0 +1,13 @@
+SOURCE AUTHORITY ORDER
+
+1. EA CnC_Generals_Zero_Hour + retail Zero Hour behavior: primary original-behavior authority.
+2. User-owned original game data: primary content/config/audio/model/map data.
+3. TheSuperHackers GeneralsGameCode: modern code/refactor/testing reference.
+4. TheSuperHackers GeneralsGamePatch: patch/content/fix reference, not silent authority over retail behavior.
+5. Tarek GeneralsZH-Android: Android ARM64/DXVK/SDL/touch/platform reference.
+6. Molotov Android port: Mali/Android compatibility reference.
+7. GeneralsX: cross-platform modernization reference.
+8. Vulkan/SDL/Oboe/OpenAL/etc.: platform implementation references.
+
+RULE:
+Do not change original gameplay behavior merely because a modern/reference project implements something differently.

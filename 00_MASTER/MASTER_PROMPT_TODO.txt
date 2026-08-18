@@ -1,0 +1,4 @@
+MASTER PROMPT STATUS:
+The final "build the whole 2026 Android engine" execution prompt is intentionally not frozen yet.
+Before the experimental rebuild, paste the final reviewed prompt into this folder as:
+MASTER_PROMPT.txt

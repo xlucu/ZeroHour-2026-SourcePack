@@ -1,0 +1,28 @@
+# Never publish user's original commercial game data
+90_PRIVATE_NOT_FOR_GITHUB/
+*.big
+
+# Generated Android/desktop build outputs
+**/build/
+**/.cxx/
+**/.gradle/
+**/.idea/
+**/out/
+**/.cache/
+**/__pycache__/
+*.apk
+*.aab
+*.o
+*.obj
+*.pdb
+*.class
+*.idsig
+
+# Local logs that may be noisy
+PREPARE_SOURCEPACK_LOG.txt
+# Local publish log
+PUBLISH_GITHUB_LOG.txt
+
+# Large local build/tool binaries - keep locally, do not publish
+/12_CURRENT_ANDROID_PROJECT/GeneralsZH-Android-CLEAN/tools/gradle-8.7-bin.zip
+/12_CURRENT_ANDROID_PROJECT/GeneralsZH-Android-CLEAN/tools/mali-dxvk/glslang-main-tot/lib/SPIRV-Tools-optd.lib

@@ -1,0 +1,16 @@
+[binaries]
+c = 'C:/Users/DELL/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android28-clang.cmd'
+cpp = 'C:/Users/DELL/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android28-clang++.cmd'
+ar = 'C:/Users/DELL/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe'
+strip = 'C:/Users/DELL/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip.exe'
+pkg-config = ['C:/Users/DELL/AppData/Local/Programs/Python/Python314/python.exe', 'C:/Users/DELL/AndroidStudioProjects/GeneralsZH-Android-CLEAN/tools/pkg-config-sdl3.py']
+
+[built-in options]
+c_args = ['-DVK_ENABLE_BETA_EXTENSIONS', '-DVK_USE_PLATFORM_ANDROID_KHR']
+cpp_args = ['-DVK_ENABLE_BETA_EXTENSIONS', '-DVK_USE_PLATFORM_ANDROID_KHR']
+
+[host_machine]
+system = 'linux'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'

@@ -1,0 +1,6 @@
+EXPORTS
+    OpenAdapter
+    GetPrivateDDITable
+    GetPrivateDDITableVersioned
+    SetAppCompatData
+    D3D9on12SetGraphicsRenderCallback

@@ -1,0 +1,11 @@
+﻿Generated: 2026-08-16 20:22:17 +03:00
+OS: Microsoft Windows NT 10.0.26200.0
+PowerShell: 5.1.26100.8875
+Git: git version 2.53.0.windows.2
+PATH EXISTS [C:\Users\DELL\AppData\Local\Android\Sdk] = True
+PATH EXISTS [C:\Users\DELL\AppData\Local\Android\Sdk\ndk\27.1.12297006] = True
+PATH EXISTS [C:\Users\DELL\AppData\Local\Android\Sdk\cmake\3.31.6] = True
+ADB devices exit: 0
+List of devices attached
+143332554S104046       device product:X6873-OP model:Infinix_X6873 device:Infinix-X6873 transport_id:10
+
